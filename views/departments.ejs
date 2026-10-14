@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head') %></head>
+<body>
+<%- include('partials/scaffold_top') %>
+<section class="page-header">
+  <div class="container">
+    <p class="eyebrow fade-up">Organization</p>
+    <h1 class="fade-up delay-1">Departments</h1>
+    <p class="fade-up delay-2">Headcount, tenure and the people behind every function.</p>
+  </div>
+</section>
+<main class="container" style="padding-bottom:60px">
+  <div class="dept-grid">
+    <% depts.forEach(function(d, i) { %>
+      <a class="dept-card fade-up" style="animation-delay:<%= i * 0.05 %>s" href="/directory?department=<%= d.id %>">
+        <div class="dept-card-head">
+          <span class="dept-index"><%= String(i + 1).padStart(2, '0') %></span>
+          <h3><%= d.name %></h3>
+        </div>
+        <div class="dept-stats">
+          <div><strong><%= d.total %></strong><span>People</span></div>
+          <div><strong><%= d.active || 0 %></strong><span>Active</span></div>
+          <div><strong><%= d.avg_tenure || 0 %></strong><span>Avg yrs</span></div>
+          <div><strong><%= d.locations %></strong><span>Sites</span></div>
+        </div>
+        <% if (d.lead) { %>
+          <p class="dept-lead"><img src="<%= d.lead.avatar_url || ('/avatar/' + d.lead.id + '.svg?f=1') %>" alt=""> <span><strong><%= d.lead.full_name %></strong><br><small class="muted"><%= d.lead.job_title || 'Team Member' %></small></span></p>
+        <% } %>
+        <div class="avatar-stack">
+          <% d.members.forEach(function(m) { %><img src="<%= m.avatar_url || ('/avatar/' + m.id + '.svg?f=1') %>" alt="<%= m.full_name %>" title="<%= m.full_name %>" loading="lazy"><% }) %>
+          <% if (d.total > d.members.length) { %><span class="stack-more">+<%= d.total - d.members.length %></span><% } %>
+        </div>
+        <span class="dept-go">Browse team <svg class="icon icon-sm"><use href="#icon-arrow-right"></use></svg></span>
+      </a>
+    <% }) %>
+  </div>
+</main>
+<%- include('partials/footer') %>
+</body>
+</html>

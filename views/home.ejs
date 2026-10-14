@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head') %>
+</head>
+<body>
+<%- include('partials/icon-sprite') %>
+
+<div class="preloader" id="preloader">
+  <div class="preloader-inner">
+    <svg class="icon" style="width:34px;height:34px;color:var(--primary);"><use href="#icon-logo"></use></svg>
+    <div class="preloader-bar"><div class="preloader-fill"></div></div>
+  </div>
+</div>
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<div class="toast-stack" id="toastStack">
+  <%- include('partials/flash') %>
+</div>
+
+<%- include('partials/navbar') %>
+
+<!-- ============ CINEMATIC HERO ============ -->
+<section class="hero hero-cinematic">
+  <div class="hero-orbs" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+  </div>
+  <div class="hero-grid-overlay" aria-hidden="true"></div>
+  <%- include('partials/hero-illustration') %>
+
+  <div class="container hero-inner">
+    <div class="hero-eyebrow fade-up">
+      <span class="pulse-dot"></span> Live directory · <%= heroStats.total %> active team members
+    </div>
+
+    <h1 class="hero-title reveal-title">
+      <span class="reveal-word">Find</span>
+      <span class="reveal-word">anyone</span>
+      <span class="reveal-word">on</span>
+      <span class="reveal-word">the</span>
+      <span class="reveal-word grad-text">team,</span>
+      <span class="reveal-word grad-text">instantly.</span>
+    </h1>
+    <p class="hero-sub fade-up delay-2">Search by name, role, or skill. Browse departments. Reach out in one click.</p>
+
+    <div class="hero-cta fade-up delay-3">
+      <a href="/directory" class="btn btn-primary">
+        <svg class="icon icon-sm"><use href="#icon-search"></use></svg> Browse Directory
+      </a>
+      <a href="/ai" class="btn btn-ghost">
+        <svg class="icon icon-sm"><use href="#icon-sparkle"></use></svg> Ask the AI Assistant
+      </a>
+    </div>
+
+    <!-- Animated stat counters -->
+    <div class="hero-stats fade-up delay-3">
+      <div class="hero-stat">
+        <span class="counter" data-count="<%= heroStats.total %>">0</span>
+        <span class="hero-stat-label">Team Members</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="counter" data-count="<%= heroStats.departments %>">0</span>
+        <span class="hero-stat-label">Departments</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="counter" data-count="<%= heroStats.locations %>">0</span>
+        <span class="hero-stat-label">Locations</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="counter" data-count="<%= heroStats.avgTenure %>" data-decimal="1">0</span>
+        <span class="hero-stat-label">Avg. Years Tenure</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURED CAROUSEL ============ -->
+<% if (featured && featured.length) { %>
+<section class="featured-section">
+  <div class="container">
+    <div class="section-heading fade-up">
+      <h2><svg class="icon icon-md" style="color:var(--primary);vertical-align:-3px;"><use href="#icon-sparkle"></use></svg> Spotlight Team Members</h2>
+      <div class="carousel-controls">
+        <button class="carousel-btn" id="carouselPrev" aria-label="Previous">
+          <svg class="icon icon-sm" style="transform:rotate(180deg)"><use href="#icon-arrow-right"></use></svg>
+        </button>
+        <button class="carousel-btn" id="carouselNext" aria-label="Next">
+          <svg class="icon icon-sm"><use href="#icon-arrow-right"></use></svg>
+        </button>
+      </div>
+    </div>
+    <div class="carousel-track-wrap fade-up delay-1">
+      <div class="carousel-track" id="carouselTrack">
+        <% featured.forEach(function(f) { %>
+          <a href="/employee/<%= f.id %>" class="spotlight-card">
+            <div class="spotlight-img-wrap">
+              <img src="<%= f.avatar_url || ('/avatar/' + f.id + '.svg') %>" alt="<%= f.full_name %>" loading="lazy">
+              <div class="spotlight-overlay"></div>
+              <% if (f.department_name) { %>
+                <span class="dept-badge spotlight-badge"><%= f.department_name %></span>
+              <% } %>
+            </div>
+            <div class="spotlight-info">
+              <h3><%= f.full_name %></h3>
+              <p><%= f.job_title || 'Team Member' %></p>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<!-- ============ SKILLS MARQUEE ============ -->
+<% if (topSkills && topSkills.length) { %>
+<div class="marquee" aria-label="Top skills">
+  <div class="marquee-track">
+    <% for (var rep = 0; rep < 2; rep++) { topSkills.forEach(function(sk) { %>
+      <a href="/directory?q=<%= encodeURIComponent(sk.name) %>" class="marquee-item"><%= sk.name %> <small><%= sk.count %></small></a>
+    <% }) } %>
+  </div>
+</div>
+<% } %>
+
+<!-- ============ TEAM PULSE ============ -->
+<section class="pulse-section">
+  <div class="container">
+    <div class="section-heading fade-up"><h2>Team pulse</h2><span class="muted">What is happening across the company</span></div>
+    <div class="pulse-grid">
+      <div class="pulse-card fade-up">
+        <h3><svg class="icon icon-sm"><use href="#icon-star"></use></svg> Work anniversaries</h3>
+        <% if (!anniversaries.length) { %><p class="muted">No upcoming anniversaries.</p><% } %>
+        <ul class="pulse-list">
+          <% anniversaries.forEach(function(a) { %>
+            <li><a href="/employee/<%= a.id %>">
+              <img src="<%= a.avatar_url || ('/avatar/' + a.id + '.svg?f=1') %>" alt="">
+              <span><strong><%= a.full_name %></strong><small><%= a.years %> year<%= a.years === 1 ? '' : 's' %> · <%= a.days === 0 ? 'today' : (a.days === 1 ? 'tomorrow' : 'in ' + a.days + ' days') %></small></span>
+            </a></li>
+          <% }) %>
+        </ul>
+      </div>
+      <div class="pulse-card fade-up delay-1">
+        <h3><svg class="icon icon-sm"><use href="#icon-users"></use></svg> New joiners</h3>
+        <% if (!newJoiners.length) { %><p class="muted">No new joiners in the last 120 days.</p><% } %>
+        <ul class="pulse-list">
+          <% newJoiners.forEach(function(a) { %>
+            <li><a href="/employee/<%= a.id %>">
+              <img src="<%= a.avatar_url || ('/avatar/' + a.id + '.svg?f=1') %>" alt="">
+              <span><strong><%= a.full_name %></strong><small><%= a.job_title || 'Team Member' %><%= a.department_name ? ' · ' + a.department_name : '' %></small></span>
+            </a></li>
+          <% }) %>
+        </ul>
+      </div>
+      <div class="pulse-card fade-up delay-2">
+        <h3><svg class="icon icon-sm"><use href="#icon-clock"></use></svg> Out of office</h3>
+        <% if (!onLeave.length) { %><p class="muted">Everyone is in. Nobody is on leave.</p><% } %>
+        <ul class="pulse-list">
+          <% onLeave.forEach(function(a) { %>
+            <li><a href="/employee/<%= a.id %>">
+              <img src="<%= a.avatar_url || ('/avatar/' + a.id + '.svg?f=1') %>" alt="">
+              <span><strong><%= a.full_name %></strong><small><%= a.job_title || 'Team Member' %></small></span>
+            </a></li>
+          <% }) %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ANNOUNCEMENTS ============ -->
+<% if (announcements && announcements.length) { %>
+<section class="news-section">
+  <div class="container">
+    <div class="section-heading fade-up"><h2>Announcements</h2></div>
+    <div class="news-grid">
+      <% announcements.forEach(function(n, i) { %>
+        <article class="news-card fade-up" style="animation-delay:<%= i * 0.06 %>s">
+          <div class="news-meta"><span class="news-tag"><%= n.category %></span><% if (n.pinned) { %><span class="news-pin">Pinned</span><% } %><time><%= new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></time></div>
+          <h3><%= n.title %></h3>
+          <p><%= n.body %></p>
+        </article>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<!-- ============ AI TEASER ============ -->
+<section class="ai-teaser">
+  <div class="container ai-teaser-inner">
+    <div>
+      <p class="eyebrow">AI Assistant</p>
+      <h2>Ask who can help, in plain English.</h2>
+      <p class="muted">Find experts, build project teams, compare colleagues and draft outreach.</p>
+    </div>
+    <form id="aiTeaserForm" class="teaser-form">
+      <input id="aiTeaserInput" type="text" maxlength="300" placeholder="e.g. Who has experience with Node.js and SQL?" autocomplete="off" data-cursor="text">
+      <button class="btn btn-primary" type="submit">Ask</button>
+    </form>
+  </div>
+</section>
+
+<section class="recent-section" id="recentSection" hidden>
+  <div class="container">
+    <div class="recent-head"><h2 class="section-title">Recently viewed</h2><button type="button" class="btn btn-ghost" id="recentClear">Clear</button></div>
+    <div class="recent-track" id="recentTrack"></div>
+  </div>
+</section>
+
+<!-- ============ QUICK LINK CARDS ============ -->
+<section class="quicklinks-section">
+  <div class="container quicklinks-grid">
+    <a href="/directory" class="quicklink-card fade-up">
+      <svg class="icon icon-lg"><use href="#icon-users"></use></svg>
+      <h3>Directory</h3>
+      <p>Search, filter, and browse every team member.</p>
+      <span class="quicklink-arrow"><svg class="icon icon-sm"><use href="#icon-arrow-right"></use></svg></span>
+    </a>
+    <a href="/insights" class="quicklink-card fade-up delay-1">
+      <svg class="icon icon-lg"><use href="#icon-chart"></use></svg>
+      <h3>Team Insights</h3>
+      <p>Headcount, status mix, and location breakdowns.</p>
+      <span class="quicklink-arrow"><svg class="icon icon-sm"><use href="#icon-arrow-right"></use></svg></span>
+    </a>
+    <a href="/ai" class="quicklink-card fade-up delay-1" data-cursor-label="Open">
+      <svg class="icon icon-lg"><use href="#icon-sparkle"></use></svg>
+      <h3>AI Assistant</h3>
+      <p>Ask questions, build teams and draft messages.</p>
+      <span class="quicklink-arrow"><svg class="icon icon-sm"><use href="#icon-arrow-right"></use></svg></span>
+    </a>
+    <a href="/skills" class="quicklink-card fade-up delay-2" data-cursor-label="Open">
+      <svg class="icon icon-lg"><use href="#icon-trend"></use></svg>
+      <h3>Skills Explorer</h3>
+      <p>See who knows what across the organization.</p>
+      <span class="quicklink-arrow"><svg class="icon icon-sm"><use href="#icon-arrow-right"></use></svg></span>
+    </a>
+    <a href="/departments" class="quicklink-card fade-up delay-3" data-cursor-label="Open">
+      <svg class="icon icon-lg"><use href="#icon-building"></use></svg>
+      <h3>Departments</h3>
+      <p>Headcount, tenure and leads for every team.</p>
+      <span class="quicklink-arrow"><svg class="icon icon-sm"><use href="#icon-arrow-right"></use></svg></span>
+    </a>
+    <a href="/admin/dashboard" class="quicklink-card fade-up delay-2">
+      <svg class="icon icon-lg"><use href="#icon-lock"></use></svg>
+      <h3>Admin Panel</h3>
+      <p>Manage employees, departments, and activity.</p>
+      <span class="quicklink-arrow"><svg class="icon icon-sm"><use href="#icon-arrow-right"></use></svg></span>
+    </a>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
+</body>
+</html>

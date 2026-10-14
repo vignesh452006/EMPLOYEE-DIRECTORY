@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head') %></head>
+<body>
+<%- include('partials/scaffold_top') %>
+<section class="page-header">
+  <div class="container">
+    <p class="eyebrow fade-up">Skills explorer</p>
+    <h1 class="fade-up delay-1">What the organization knows.</h1>
+    <p class="fade-up delay-2"><%= skills.length %> distinct skills across the team. Select a skill to see who has it.</p>
+    <div class="search-input-wrap fade-up delay-2" style="max-width:420px">
+      <svg class="icon search-icon"><use href="#icon-search"></use></svg>
+      <input type="text" id="skillFilter" placeholder="Filter skills..." autocomplete="off" data-cursor="text">
+    </div>
+  </div>
+</section>
+<main class="container" style="padding-bottom:60px">
+  <% if (!skills.length) { %><p class="muted" style="margin-top:30px">No skills recorded yet.</p><% } %>
+  <div class="skill-grid" id="skillGrid">
+    <% var max = skills.length ? skills[0].people.length : 1; skills.forEach(function(s, i) { %>
+      <a class="skill-card fade-up" style="animation-delay:<%= Math.min(i, 20) * 0.03 %>s" data-name="<%= s.name.toLowerCase() %>" href="/directory?q=<%= encodeURIComponent(s.name) %>">
+        <div class="skill-top"><h3><%= s.name %></h3><span class="skill-count"><%= s.people.length %></span></div>
+        <div class="skill-bar"><span style="width:<%= Math.max(8, (s.people.length / max) * 100) %>%"></span></div>
+        <div class="avatar-stack">
+          <% s.people.slice(0, 5).forEach(function(p) { %>
+            <img src="<%= p.avatar_url || ('/avatar/' + p.id + '.svg?f=1') %>" alt="<%= p.full_name %>" title="<%= p.full_name %>" loading="lazy">
+          <% }) %>
+          <% if (s.people.length > 5) { %><span class="stack-more">+<%= s.people.length - 5 %></span><% } %>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+</main>
+<%- include('partials/footer') %>
+</body>
+</html>

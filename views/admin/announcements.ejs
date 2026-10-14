@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/admin_head') %>
+</head>
+<body class="admin-body">
+<%- include('../partials/icon-sprite') %>
+<div class="toast-stack" id="toastStack"><%- include('../partials/flash') %></div>
+<%- include('../partials/admin_sidebar') %>
+<main class="admin-main">
+  <header class="admin-topbar">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu"><svg class="icon icon-lg"><use href="#icon-list"></use></svg></button>
+    <h1>Announcements</h1>
+  </header>
+  <section class="admin-grid-2">
+    <div class="panel fade-up">
+      <h2>New announcement</h2>
+      <form action="/admin/announcements" method="POST" class="stack-form">
+        <label>Title<input type="text" name="title" required maxlength="200" placeholder="Quarterly all-hands"></label>
+        <label>Message<textarea name="body" rows="4" maxlength="2000" placeholder="Share the details..."></textarea></label>
+        <label>Category<select name="category"><option value="news">News</option><option value="event">Event</option><option value="policy">Policy</option><option value="milestone">Milestone</option></select></label>
+        <label class="check"><input type="checkbox" name="pinned" value="1"> Pin to the top of the home page</label>
+        <button class="btn btn-primary" type="submit">Publish</button>
+      </form>
+    </div>
+    <div class="panel fade-up delay-1">
+      <h2>Published (<%= items.length %>)</h2>
+      <% if (!items.length) { %><p class="muted">Nothing published yet.</p><% } %>
+      <ul class="attention-list">
+        <% items.forEach(function(n) { %>
+          <li class="ann-row">
+            <div style="flex:1;min-width:0"><strong><%= n.title %></strong>
+              <div class="muted" style="font-size:.8rem"><%= n.category %> · <%= new Date(n.created_at).toLocaleDateString() %><%= n.pinned ? ' · pinned' : '' %></div></div>
+            <form action="/admin/announcements/<%= n.id %>/pin" method="POST" class="inline-form"><button class="table-action"><%= n.pinned ? 'Unpin' : 'Pin' %></button></form>
+            <form action="/admin/announcements/<%= n.id %>?_method=DELETE" method="POST" class="inline-form" data-confirm="Delete this announcement?"><button class="table-action danger">Delete</button></form>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+  </section>
+</main>
+<script src="/js/main.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/cursor.js"></script>
+</body>
+</html>

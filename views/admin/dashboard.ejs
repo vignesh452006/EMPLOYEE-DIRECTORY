@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/admin_head') %>
+</head>
+<body class="admin-body">
+<%- include('../partials/icon-sprite') %>
+<div class="toast-stack" id="toastStack">
+  <%- include('../partials/flash') %>
+</div>
+
+<%- include('../partials/admin_sidebar') %>
+
+<main class="admin-main">
+  <header class="admin-topbar">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">
+      <svg class="icon icon-lg"><use href="#icon-list"></use></svg>
+    </button>
+    <h1>Dashboard</h1>
+    <a href="/admin/employees/new" class="btn btn-primary">+ Add Employee</a>
+  </header>
+
+  <section class="stat-grid">
+    <div class="stat-card fade-up"><svg class="icon stat-icon"><use href="#icon-users"></use></svg>
+      <div><p class="stat-value"><%= stats.total %></p><p class="stat-label">Total employees</p></div></div>
+    <div class="stat-card fade-up delay-1"><svg class="icon stat-icon"><use href="#icon-check-circle"></use></svg>
+      <div><p class="stat-value"><%= stats.active %></p><p class="stat-label">Active</p></div></div>
+    <div class="stat-card fade-up delay-2"><svg class="icon stat-icon"><use href="#icon-clock"></use></svg>
+      <div><p class="stat-value"><%= stats.onLeave %></p><p class="stat-label">On leave</p></div></div>
+    <div class="stat-card fade-up delay-3"><svg class="icon stat-icon"><use href="#icon-building"></use></svg>
+      <div><p class="stat-value"><%= stats.deptCount %></p><p class="stat-label">Departments</p></div></div>
+    <div class="stat-card fade-up"><svg class="icon stat-icon"><use href="#icon-trend"></use></svg>
+      <div><p class="stat-value"><%= stats.newThisMonth %></p><p class="stat-label">Hired this month</p></div></div>
+    <div class="stat-card fade-up delay-1"><svg class="icon stat-icon"><use href="#icon-chart"></use></svg>
+      <div><p class="stat-value"><%= stats.avgTenure %></p><p class="stat-label">Avg tenure (yrs)</p></div></div>
+  </section>
+
+  <section class="quick-actions fade-up">
+    <a class="qa" href="/admin/employees/new"><svg class="icon icon-sm"><use href="#icon-users"></use></svg> Add employee</a>
+    <a class="qa" href="/admin/employees?status=on_leave"><svg class="icon icon-sm"><use href="#icon-clock"></use></svg> Who is on leave</a>
+    <a class="qa" href="/admin/employees/export"><svg class="icon icon-sm"><use href="#icon-download"></use></svg> Export CSV</a>
+    <a class="qa" href="/admin/announcements"><svg class="icon icon-sm"><use href="#icon-mail"></use></svg> Post announcement</a>
+    <a class="qa" href="/admin/settings"><svg class="icon icon-sm"><use href="#icon-sparkle"></use></svg> AI: <%= gemini ? 'Gemini on' : 'smart-match' %></a>
+  </section>
+
+  <section class="admin-grid-2">
+    <div class="panel fade-up">
+      <h2>Hires per year</h2>
+      <% var hmax = Math.max.apply(null, hires.map(function(h){return h.count;}).concat([1])); %>
+      <div class="col-chart">
+        <% hires.forEach(function(h) { %>
+          <div class="col-item" title="<%= h.label %>: <%= h.count %>">
+            <span class="col-val"><%= h.count || '' %></span>
+            <div class="col-bar" style="height:<%= Math.max(h.count ? 8 : 2, (h.count / hmax) * 100) %>%"></div>
+            <span class="col-lbl"><%= h.label %></span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <div class="panel fade-up delay-1">
+      <h2>Profile completeness</h2>
+      <% quality.items.forEach(function(it) { %>
+        <div class="bar-row"><span class="bar-label"><%= it.name %></span>
+          <div class="bar-track"><div class="bar-fill" style="width:<%= it.pct %>%"></div></div><span class="bar-count"><%= it.pct %>%</span></div>
+      <% }) %>
+    </div>
+  </section>
+
+  <% if (incomplete.length) { %>
+  <section class="panel fade-up">
+    <div class="panel-header"><h2>Needs attention</h2><span class="muted">Profiles missing a bio, skills or phone</span></div>
+    <ul class="attention-list">
+      <% incomplete.forEach(function(e) { var miss = []; if (!e.bio) miss.push('bio'); if (!e.skills) miss.push('skills'); if (!e.phone) miss.push('phone'); %>
+        <li><img src="/avatar/<%= e.id %>.svg?f=1" class="table-avatar" alt=""><strong><%= e.full_name %></strong><span class="muted">missing <%= miss.join(', ') %></span><a class="table-action" href="/admin/employees/<%= e.id %>/edit">Complete</a></li>
+      <% }) %>
+    </ul>
+  </section>
+  <% } %>
+
+  <section class="admin-grid-2">
+    <div class="panel fade-up">
+      <h2>Employees by Department</h2>
+      <div class="bar-chart">
+        <% var maxCount = Math.max(...byDept.map(d => d.count), 1); %>
+        <% byDept.forEach(function(d) { %>
+          <div class="bar-row">
+            <span class="bar-label"><%= d.name %></span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: <%= (d.count / maxCount) * 100 %>%"></div>
+            </div>
+            <span class="bar-count"><%= d.count %></span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="panel fade-up delay-1">
+      <h2>Recent Activity</h2>
+      <ul class="activity-list">
+        <% if (!activity.length) { %><li class="muted">No activity yet.</li><% } %>
+        <% activity.forEach(function(a) { %>
+          <li>
+            <span class="activity-dot activity-<%= a.action %>"></span>
+            <div>
+              <p><strong><%= a.admin_name || 'System' %></strong> <%= ({create:'created',update:'updated',delete:'deleted',export:'exported',login:'signed in'})[a.action] || a.action %> <%= a.target_type %> — <%= a.details %></p>
+              <span class="activity-time"><%= new Date(a.created_at).toLocaleString() %></span>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+      <a href="/admin/activity" class="see-all">See full activity log →</a>
+    </div>
+  </section>
+
+  <section class="panel fade-up delay-2">
+    <div class="panel-header">
+      <h2>Recently Added Employees</h2>
+      <a href="/admin/employees" class="see-all">View all →</a>
+    </div>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        <% recent.forEach(function(e) { %>
+          <tr>
+            <td class="cell-name">
+              <img src="<%= e.avatar_url || ('/avatar/' + e.id + '.svg?f=1') %>" class="table-avatar">
+              <%= e.full_name %>
+            </td>
+            <td><%= e.job_title || '—' %></td>
+            <td><%= e.department_name || '—' %></td>
+            <td><span class="status-pill status-<%= e.status %>"><%= e.status %></span></td>
+            <td><a href="/admin/employees/<%= e.id %>/edit" class="table-action">Edit</a></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script src="/js/main.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/cursor.js"></script>
+</body>
+</html>

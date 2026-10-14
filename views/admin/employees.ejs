@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/admin_head') %>
+</head>
+<body class="admin-body">
+<%- include('../partials/icon-sprite') %>
+<div class="toast-stack" id="toastStack">
+  <%- include('../partials/flash') %>
+</div>
+
+<%- include('../partials/admin_sidebar') %>
+
+<main class="admin-main">
+  <header class="admin-topbar">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">
+      <svg class="icon icon-lg"><use href="#icon-list"></use></svg>
+    </button>
+    <h1>Manage Employees</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn btn-ghost" href="/admin/employees/export?<%= qs %>">Export CSV</a>
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('importPanel').classList.toggle('open')">Import CSV</button>
+      <a href="/admin/employees/new" class="btn btn-primary">+ Add Employee</a>
+    </div>
+  </header>
+
+  <section class="panel import-panel" id="importPanel">
+    <form action="/admin/employees/import" method="POST" enctype="multipart/form-data" class="admin-search-bar">
+      <input type="file" name="csv_file" accept=".csv" required>
+      <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+    <p class="muted" style="margin-top:8px;font-size:.85rem">Columns: Full Name, Email, Phone, Job Title, Department, Location, Status, Employee Code, Hire Date (YYYY-MM-DD), Skills. Duplicates are skipped.</p>
+  </section>
+
+  <section class="panel fade-up">
+    <form class="admin-search-bar" method="GET" action="/admin/employees">
+      <input type="text" name="q" placeholder="Search name, email, role or skill..." value="<%= search %>">
+      <select name="department"><option value="">All departments</option>
+        <% departments.forEach(function(d) { %><option value="<%= d.id %>" <%= String(department) === String(d.id) ? 'selected' : '' %>><%= d.name %></option><% }) %></select>
+      <select name="status"><option value="">Any status</option>
+        <% ['active','on_leave','inactive'].forEach(function(st) { %><option value="<%= st %>" <%= status === st ? 'selected' : '' %>><%= st.replace('_',' ') %></option><% }) %></select>
+      <select name="sort">
+        <% [['newest','Newest added'],['name_asc','Name A–Z'],['name_desc','Name Z–A'],['hire_new','Hire date (new)'],['hire_old','Hire date (old)']].forEach(function(o) { %>
+          <option value="<%= o[0] %>" <%= sort === o[0] ? 'selected' : '' %>><%= o[1] %></option><% }) %></select>
+      <button type="submit" class="btn btn-secondary">Apply</button>
+      <% if (search || department || status) { %><a href="/admin/employees" class="btn btn-ghost">Clear</a><% } %>
+    </form>
+    <p class="muted" style="margin:0 0 10px;font-size:.85rem"><%= total %> result<%= total === 1 ? '' : 's' %></p>
+
+    <form id="bulkForm" action="/admin/employees/bulk" method="POST">
+    <div class="bulk-bar" id="bulkBar" hidden>
+      <strong><span id="bulkCount">0</span> selected</strong>
+      <select name="action" id="bulkAction">
+        <option value="">Bulk action...</option>
+        <optgroup label="Status"><option value="active">Set active</option><option value="on_leave">Set on leave</option><option value="inactive">Set inactive</option></optgroup>
+        <optgroup label="Move to department"><% departments.forEach(function(d) { %><option value="dept:<%= d.id %>"><%= d.name %></option><% }) %></optgroup>
+        <optgroup label="Spotlight"><option value="feature">Add to spotlight</option><option value="unfeature">Remove from spotlight</option></optgroup>
+        <option value="delete">Delete selected</option>
+      </select>
+      <button type="submit" class="btn btn-primary">Apply</button>
+    </div>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr><th style="width:34px"><input type="checkbox" id="selectAll" aria-label="Select all"></th><th>Employee</th><th>Role</th><th>Department</th><th>Status</th><th>Email</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <% if (!employees.length) { %>
+            <tr><td colspan="7" class="muted" style="text-align:center;padding:2rem;">No employees found.</td></tr>
+          <% } %>
+          <% employees.forEach(function(e) { %>
+            <tr>
+              <td><input type="checkbox" class="row-check" name="ids" value="<%= e.id %>" aria-label="Select <%= e.full_name %>"></td>
+              <td class="cell-name">
+                <img src="<%= e.avatar_url || ('/avatar/' + e.id + '.svg?f=1') %>" class="table-avatar" alt="">
+                <%= e.full_name %>
+              </td>
+              <td><%= e.job_title || '—' %></td>
+              <td>
+                <% if (e.department_name) { %>
+                  <span class="dept-badge"><%= e.department_name %></span>
+                <% } else { %>—<% } %>
+              </td>
+              <td><span class="status-pill status-<%= e.status %>"><%= e.status.replace('_',' ') %></span></td>
+              <td><%= e.email %></td>
+              <td class="actions-cell">
+                <a href="/employee/<%= e.id %>" target="_blank" class="table-action" title="View public profile">View</a>
+                <a href="/admin/employees/<%= e.id %>/edit" class="table-action">Edit</a>
+                <button type="submit" class="table-action danger" formaction="/admin/employees/<%= e.id %>?_method=DELETE" formmethod="POST" data-confirm-btn="Delete this employee? This cannot be undone." onclick="document.querySelectorAll('.row-check').forEach(function(c){c.disabled=true})">Delete</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    </form>
+
+    <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% for (let p = 1; p <= totalPages; p++) { %>
+          <a class="page-link <%= p === safePage ? 'active' : '' %>" href="/admin/employees?<%= qs %>&page=<%= p %>"><%= p %></a>
+        <% } %>
+      </div>
+    <% } %>
+  </section>
+</main>
+
+<script src="/js/main.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/cursor.js"></script>
+</body>
+</html>

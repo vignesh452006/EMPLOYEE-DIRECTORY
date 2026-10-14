@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head') %></head>
+<body>
+<%- include('partials/scaffold_top') %>
+
+<section class="page-header ai-hero">
+  <div class="container">
+    <p class="eyebrow fade-up"><span class="pulse-dot"></span> AI Assistant
+      <span class="mode-badge" id="aiMode" data-enabled="<%= aiEnabled ? '1' : '0' %>"><%= aiEnabled ? 'Gemini connected' : 'Smart-match mode' %></span></p>
+    <h1 class="fade-up delay-1">Ask your organization anything.</h1>
+    <p class="fade-up delay-2">Find experts, assemble project teams, compare colleagues and draft outreach, all grounded in your directory data.</p>
+  </div>
+</section>
+
+<main class="container ai-main">
+  <div class="ai-tabs fade-up" role="tablist">
+    <button class="ai-tab active" data-tab="ask" role="tab"><svg class="icon icon-sm"><use href="#icon-search"></use></svg> Ask</button>
+    <button class="ai-tab" data-tab="team" role="tab"><svg class="icon icon-sm"><use href="#icon-users"></use></svg> Team builder</button>
+    <button class="ai-tab" data-tab="compare" role="tab"><svg class="icon icon-sm"><use href="#icon-chart"></use></svg> Compare</button>
+    <button class="ai-tab" data-tab="draft" role="tab"><svg class="icon icon-sm"><use href="#icon-mail"></use></svg> Draft message</button>
+  </div>
+
+  <!-- ASK -->
+  <section class="ai-pane active" data-pane="ask">
+    <div class="chat" id="chat">
+      <div class="chat-thread" id="chatThread" aria-live="polite">
+        <div class="bubble bot">Hi, I can find people by skill, role, department or location. Try one of these:</div>
+      </div>
+      <div class="chips-row" id="chatChips">
+        <button class="chip-btn" data-q="Who knows React?">Who knows React?</button>
+        <button class="chip-btn" data-q="Designers on the team">Designers on the team</button>
+        <button class="chip-btn" data-q="Who is on leave?">Who is on leave?</button>
+        <button class="chip-btn" data-q="Backend engineers in London">Backend engineers in London</button>
+        <button class="chip-btn" data-q="Who works in marketing?">Who works in marketing?</button>
+      </div>
+      <form class="chat-form" id="chatForm">
+        <input type="text" id="chatInput" maxlength="300" placeholder="Ask about people, skills or teams..." autocomplete="off" data-cursor="text">
+        <button class="btn btn-primary" type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- TEAM BUILDER -->
+  <section class="ai-pane" data-pane="team">
+    <div class="tool-card">
+      <h2>Project team builder</h2>
+      <p class="muted">Describe a project and get a balanced squad with a role for each person.</p>
+      <textarea id="teamBrief" rows="3" maxlength="500" placeholder="e.g. Launch a customer analytics dashboard with a Node backend, polished UI and a marketing rollout."></textarea>
+      <button class="btn btn-primary" id="teamGo">Assemble team</button>
+      <div class="tool-out" id="teamOut"></div>
+    </div>
+  </section>
+
+  <!-- COMPARE -->
+  <section class="ai-pane" data-pane="compare">
+    <div class="tool-card">
+      <h2>Compare colleagues</h2>
+      <p class="muted">Pick two or three people to compare skills, tenure and fit.</p>
+      <div class="select-row">
+        <% [1,2,3].forEach(function(n) { %>
+          <select class="cmp-select" aria-label="Person <%= n %>">
+            <option value=""><%= n === 3 ? 'Person 3 (optional)' : 'Person ' + n %></option>
+            <% people.forEach(function(p) { %><option value="<%= p.id %>"><%= p.full_name %></option><% }) %>
+          </select>
+        <% }) %>
+      </div>
+      <button class="btn btn-primary" id="cmpGo">Compare</button>
+      <div class="tool-out" id="cmpOut"></div>
+    </div>
+  </section>
+
+  <!-- DRAFT -->
+  <section class="ai-pane" data-pane="draft">
+    <div class="tool-card">
+      <h2>Draft a message</h2>
+      <p class="muted">Generate a professional note to a colleague. Review and edit before sending.</p>
+      <div class="select-row">
+        <select id="drPerson" aria-label="Recipient">
+          <option value="">Choose recipient</option>
+          <% people.forEach(function(p) { %><option value="<%= p.id %>"><%= p.full_name %><%= p.job_title ? ' · ' + p.job_title : '' %></option><% }) %>
+        </select>
+        <select id="drPurpose" aria-label="Purpose">
+          <option value="intro">Introduction</option>
+          <option value="meeting">Meeting request</option>
+          <option value="collaborate">Collaboration</option>
+          <option value="thanks">Thank you</option>
+        </select>
+      </div>
+      <input type="text" id="drNote" maxlength="300" placeholder="Optional context, e.g. the Q4 analytics roadmap" data-cursor="text">
+      <button class="btn btn-primary" id="drGo">Generate draft</button>
+      <div class="tool-out" id="drOut"></div>
+    </div>
+  </section>
+
+  <% if (!aiEnabled) { %>
+  <p class="ai-note muted">Running in smart-match mode: results come from your directory data. Set <code>GEMINI_API_KEY</code> on the server to unlock generative answers, summaries and drafting.</p>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>
+</body>
+</html>

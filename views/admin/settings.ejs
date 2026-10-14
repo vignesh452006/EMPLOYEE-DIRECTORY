@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/admin_head') %>
+</head>
+<body class="admin-body">
+<%- include('../partials/icon-sprite') %>
+<div class="toast-stack" id="toastStack"><%- include('../partials/flash') %></div>
+<%- include('../partials/admin_sidebar') %>
+<main class="admin-main">
+  <header class="admin-topbar">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu"><svg class="icon icon-lg"><use href="#icon-list"></use></svg></button>
+    <h1>AI &amp; Settings</h1>
+  </header>
+  <section class="admin-grid-2">
+    <div class="panel fade-up">
+      <h2>AI assistant</h2>
+      <p class="status-line"><span class="status-pill status-<%= gemini ? 'active' : 'on_leave' %>"><%= gemini ? 'Gemini connected' : 'Smart-match mode' %></span></p>
+      <p class="muted" style="line-height:1.6">
+        <% if (gemini) { %>Generative answers, summaries, team building and drafting use <strong><%= model %></strong>.
+        <% } else { %>No <code>GEMINI_API_KEY</code> is set, so the assistant uses built-in smart matching over your directory. Add the key as an environment variable (Railway: Variables) and restart to enable Gemini.<% } %>
+      </p>
+      <button class="btn btn-secondary" id="testAi" type="button">Test AI connection</button>
+      <p id="testAiMsg" class="muted" style="margin-top:10px"></p>
+    </div>
+    <div class="panel fade-up delay-1">
+      <h2>System</h2>
+      <ul class="kv">
+        <li><span>Environment</span><b><%= env %></b></li>
+        <li><span>Node.js</span><b><%= node %></b></li>
+        <li><span>Uptime</span><b><%= uptime %> min</b></li>
+        <li><span>Employees</span><b><%= counts.employees %></b></li>
+        <li><span>Departments</span><b><%= counts.departments %></b></li>
+        <li><span>Announcements</span><b><%= counts.announcements %></b></li>
+        <li><span>Admins</span><b><%= counts.admins %></b></li>
+        <li><span>Audit entries</span><b><%= counts.activity %></b></li>
+      </ul>
+    </div>
+  </section>
+</main>
+<script src="/js/main.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/cursor.js"></script>
+<script>
+document.getElementById('testAi').addEventListener('click', function () {
+  var m = document.getElementById('testAiMsg'); m.textContent = 'Testing...';
+  fetch('/admin/settings/test-ai', { method: 'POST' }).then(function (r) { return r.json(); })
+    .then(function (j) { m.textContent = j.message; }).catch(function () { m.textContent = 'Request failed.'; });
+});
+</script>
+</body>
+</html>
